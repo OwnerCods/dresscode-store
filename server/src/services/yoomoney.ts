@@ -33,6 +33,9 @@ export class YooMoneyService {
       }
 
       console.log('Creating payment with shopId:', this.shopId);
+      console.log('Secret key length:', this.secretKey.length);
+      console.log('Secret key prefix:', this.secretKey.substring(0, 10));
+
       const idempotenceKey = uuidv4();
 
       const paymentData = {
