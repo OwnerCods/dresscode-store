@@ -25,9 +25,14 @@ export class YooMoneyService {
   async createPayment(data: PaymentRequest): Promise<any> {
     try {
       if (!this.shopId || !this.secretKey) {
-        throw new Error('YooKassa credentials not configured');
+        console.error('YooKassa credentials not configured');
+        return {
+          success: false,
+          error: 'Payment system not configured'
+        };
       }
 
+      console.log('Creating payment with shopId:', this.shopId);
       const idempotenceKey = uuidv4();
 
       const paymentData = {
@@ -90,18 +95,6 @@ export class YooMoneyService {
 
   async checkPaymentStatus(paymentId: string): Promise<any> {
     try {
-      // Mock mode for mock payment IDs
-      if (paymentId.startsWith('mock_')) {
-        console.log('Using mock payment status check');
-        return {
-          success: true,
-          paid: true,
-          status: 'succeeded',
-          amount: '0.00',
-          metadata: {}
-        };
-      }
-
       const response = await axios.get(
         `${YOOMONEY_API_URL}/payments/${paymentId}`,
         {
@@ -130,15 +123,6 @@ export class YooMoneyService {
 
   async cancelPayment(paymentId: string): Promise<any> {
     try {
-      // Mock mode for mock payment IDs
-      if (paymentId.startsWith('mock_')) {
-        console.log('Using mock payment cancel');
-        return {
-          success: true,
-          status: 'canceled'
-        };
-      }
-
       const idempotenceKey = uuidv4();
 
       const response = await axios.post(
