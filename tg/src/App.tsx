@@ -337,6 +337,13 @@ function App() {
         </AppBar>
 
         <Container maxWidth="lg" sx={{ flex: 1, py: 3 }}>
+          {/* Debug info panel */}
+          <Box sx={{ mb: 2, p: 2, bgcolor: 'info.main', color: 'white', borderRadius: 1 }}>
+            <Typography variant="caption" component="div">
+              DEBUG: User ID: {user?.id || 'not set'} | isAdmin: {isAdmin ? 'TRUE' : 'FALSE'} | View: {currentView}
+            </Typography>
+          </Box>
+
           {currentView === 'catalog' && (
             <Catalog
               products={products}
