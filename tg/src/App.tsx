@@ -256,9 +256,14 @@ function App() {
           const telegramUser = tg.initDataUnsafe.user;
           setUser(telegramUser);
 
+          console.log('Current Telegram user ID:', telegramUser.id);
+
           // Проверяем, является ли пользователь админом через API
           try {
-            const response = await axios.get(`${API_URL}/user/check-admin/${telegramUser.id}`);
+            const apiUrl = `${API_URL}/user/check-admin/${telegramUser.id}`;
+            console.log('Checking admin status at:', apiUrl);
+            const response = await axios.get(apiUrl);
+            console.log('Admin check response:', response.data);
             if (response.data.success) {
               console.log('Is admin:', response.data.isAdmin);
               setIsAdmin(response.data.isAdmin);
