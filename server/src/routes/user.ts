@@ -2,6 +2,21 @@ import express, { Request, Response } from 'express';
 
 const router = express.Router();
 
+// Тестовый эндпоинт для проверки конфигурации админов
+router.get('/admin-config', (req: Request, res: Response) => {
+  const adminIds = (process.env.ADMIN_TELEGRAM_IDS || '')
+    .split(',')
+    .map(id => parseInt(id.trim()))
+    .filter(id => !isNaN(id));
+
+  res.json({
+    success: true,
+    adminIds: adminIds,
+    rawEnv: process.env.ADMIN_TELEGRAM_IDS,
+    count: adminIds.length
+  });
+});
+
 // Проверка, является ли пользователь админом
 router.get('/check-admin/:userId', (req: Request, res: Response) => {
   try {
