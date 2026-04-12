@@ -307,6 +307,11 @@ function App() {
     initTelegram();
   }, []);
 
+  // Отслеживаем изменения isAdmin
+  useEffect(() => {
+    console.log('=== isAdmin STATE CHANGED ===', isAdmin);
+  }, [isAdmin]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -317,6 +322,12 @@ function App() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Dress Code Store
             </Typography>
+            {/* Debug badge */}
+            {isAdmin && (
+              <Typography variant="caption" sx={{ mr: 2, bgcolor: 'success.main', px: 1, py: 0.5, borderRadius: 1 }}>
+                ADMIN
+              </Typography>
+            )}
             <IconButton color="inherit" onClick={() => setCurrentView('cart')}>
               <Badge badgeContent={getTotalItems()} color="secondary">
                 <ShoppingCartIcon />
