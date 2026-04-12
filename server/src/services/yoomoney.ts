@@ -9,8 +9,8 @@ export class YooMoneyService {
   private secretKey: string;
 
   constructor() {
-    this.shopId = process.env.YOOMONEY_SHOP_ID || '';
-    this.secretKey = process.env.YOOMONEY_SECRET_KEY || '';
+    this.shopId = (process.env.YOOMONEY_SHOP_ID || '').trim();
+    this.secretKey = (process.env.YOOMONEY_SECRET_KEY || '').trim();
 
     if (!this.shopId || !this.secretKey) {
       console.warn('YooMoney credentials not configured');
@@ -18,8 +18,11 @@ export class YooMoneyService {
   }
 
   private getAuthHeader(): string {
-    const credentials = Buffer.from(`${this.shopId}:${this.secretKey}`).toString('base64');
-    return `Basic ${credentials}`;
+    const credentials = `${this.shopId}:${this.secretKey}`;
+    const base64 = Buffer.from(credentials).toString('base64');
+    console.log('Auth header created, credentials length:', credentials.length);
+    console.log('Base64 length:', base64.length);
+    return `Basic ${base64}`;
   }
 
   async createPayment(data: PaymentRequest): Promise<any> {
