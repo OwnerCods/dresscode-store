@@ -11,6 +11,10 @@ export class YooMoneyService {
   constructor() {
     this.shopId = process.env.YOOMONEY_SHOP_ID || '';
     this.secretKey = process.env.YOOMONEY_SECRET_KEY || '';
+
+    if (!this.shopId || !this.secretKey) {
+      console.warn('YooMoney credentials not configured');
+    }
   }
 
   private getAuthHeader(): string {
@@ -20,6 +24,17 @@ export class YooMoneyService {
 
   async createPayment(data: PaymentRequest): Promise<any> {
     try {
+      // Mock mode if credentials are not properly configured
+      if (!this.shopId || !this.secretKey || this.secretKey.includes('test_')) {
+        console.log('Using mock payment mode');
+        return {
+          success: true,
+          paymentId: `mock_${uuidv4()}`,
+          confirmationUrl: `${process.env.FRONTEND_URL || 'https://dresscodenata.web.app'}?mock_payment=true&order_id=${data.orderId}`,
+          status: 'pending'
+        };
+      }
+
       const idempotenceKey = uuidv4();
 
       const paymentData = {
