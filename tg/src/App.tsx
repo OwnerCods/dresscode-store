@@ -269,14 +269,27 @@ function App() {
 
             const response = await axios.get(apiUrl);
             console.log('Admin check response:', response.data);
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
 
             if (response.data.success) {
-              console.log('Setting isAdmin to:', response.data.isAdmin);
-              setIsAdmin(response.data.isAdmin);
-              console.log('isAdmin state updated');
+              const adminStatus = response.data.isAdmin;
+              console.log('Setting isAdmin to:', adminStatus);
+              console.log('Type of isAdmin:', typeof adminStatus);
+              setIsAdmin(adminStatus);
+
+              // Проверяем через небольшую задержку, что состояние обновилось
+              setTimeout(() => {
+                console.log('isAdmin state after update (delayed check):', adminStatus);
+              }, 100);
+            } else {
+              console.error('API returned success: false');
+              setIsAdmin(false);
             }
-          } catch (error) {
+          } catch (error: any) {
             console.error('Error checking admin status:', error);
+            console.error('Error details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
             setIsAdmin(false);
           }
         }
