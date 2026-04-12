@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { Database } from './services/database.js';
 import ordersRouter from './routes/orders.js';
 import paymentRouter from './routes/payment.js';
+import userRouter from './routes/user.js';
 
 // Загружаем переменные окружения
 dotenv.config();
@@ -34,7 +35,8 @@ app.get('/', (req: Request, res: Response) => {
     version: '1.0.0',
     endpoints: {
       orders: '/api/orders',
-      payment: '/api/payment'
+      payment: '/api/payment',
+      user: '/api/user'
     }
   });
 });
@@ -42,6 +44,7 @@ app.get('/', (req: Request, res: Response) => {
 // API Routes
 app.use('/api/orders', ordersRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/user', userRouter);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {

@@ -245,7 +245,7 @@ function App() {
 
   // 4. И только потом useEffect и остальной код
   useEffect(() => {
-    const initTelegram = () => {
+    const initTelegram = async () => {
       const tg = window.Telegram?.WebApp;
       if (tg) {
         tg.expand();
@@ -256,9 +256,17 @@ function App() {
           const telegramUser = tg.initDataUnsafe.user;
           setUser(telegramUser);
 
-          // Проверяем, является ли пользователь админом
-          const adminIds = (import.meta.env.VITE_ADMIN_IDS || '').split(',').map((id: string) => parseInt(id.trim()));
-          setIsAdmin(adminIds.includes(telegramUser.id));
+          // Проверяем, является ли пользователь админом через API
+          try {
+            const response = await axios.get(`${API_URL}/user/check-admin/${telegramUser.id}`);
+            if (response.data.success) {
+              console.log('Is admin:', response.data.isAdmin);
+              setIsAdmin(response.data.isAdmin);
+            }
+          } catch (error) {
+            console.error('Error checking admin status:', error);
+            setIsAdmin(false);
+          }
         }
 
         console.log('Telegram Web App initialized');
@@ -270,7 +278,17 @@ function App() {
           username: 'test_user'
         };
         setUser(mockUser);
-        setIsAdmin(true); // В режиме разработки делаем админом
+
+        // Проверяем админа через API даже в режиме разработки
+        try {
+          const response = await axios.get(`${API_URL}/user/check-admin/${mockUser.id}`);
+          if (response.data.success) {
+            setIsAdmin(response.data.isAdmin);
+          }
+        } catch (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        }
       }
     };
 
