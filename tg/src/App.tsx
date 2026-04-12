@@ -261,12 +261,19 @@ function App() {
           // Проверяем, является ли пользователь админом через API
           try {
             const apiUrl = `${API_URL}/user/check-admin/${telegramUser.id}`;
-            console.log('Checking admin status at:', apiUrl);
+            console.log('=== ADMIN CHECK DEBUG ===');
+            console.log('User ID:', telegramUser.id);
+            console.log('User ID type:', typeof telegramUser.id);
+            console.log('API URL:', apiUrl);
+            console.log('Full user object:', JSON.stringify(telegramUser));
+
             const response = await axios.get(apiUrl);
             console.log('Admin check response:', response.data);
+
             if (response.data.success) {
-              console.log('Is admin:', response.data.isAdmin);
+              console.log('Setting isAdmin to:', response.data.isAdmin);
               setIsAdmin(response.data.isAdmin);
+              console.log('isAdmin state updated');
             }
           } catch (error) {
             console.error('Error checking admin status:', error);
@@ -376,6 +383,9 @@ function App() {
             )}
           </BottomNavigation>
         </Paper>
+
+        {/* Debug info */}
+        {console.log('=== RENDER DEBUG ===', { isAdmin, currentView, user: user?.id })}
 
         {/* Диалог оформления заказа */}
         <Dialog open={checkoutDialogOpen} onClose={() => setCheckoutDialogOpen(false)} maxWidth="sm" fullWidth>

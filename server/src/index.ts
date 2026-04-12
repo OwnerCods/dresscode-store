@@ -77,6 +77,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 API URL: http://localhost:${PORT}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
+  console.log(`👤 Admin IDs configured: ${process.env.ADMIN_TELEGRAM_IDS || 'NOT SET'}`);
 });
 
 export default app;
