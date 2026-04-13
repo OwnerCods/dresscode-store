@@ -121,6 +121,22 @@ const initialProducts: Product[] = [
     price: 4590,
     image: tshirtImg,
     category: 'Одежда'
+  },
+  {
+    id: 7,
+    name: 'Футболка Urban',
+    description: 'Вместительный городской рюкзак',
+    price: 4490,
+    image: tshirtImg1,
+    category: 'Аксессуары'
+  },
+  {
+    id: 8,
+    name: 'Брюки Limited',
+    description: 'Теплая куртка, ограниченная серия',
+    price: 2590,
+    image: tshirtImg,
+    category: 'Цифровое'
   }
 ];
 
