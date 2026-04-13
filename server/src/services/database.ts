@@ -1,13 +1,11 @@
-import fs from 'fs/promises';
-import path from 'path';
+import { MongoClient, Db, Collection } from 'mongodb';
 import { Order } from '../types/index.js';
-
-const DATA_DIR = process.env.DATA_DIR || './data';
-const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 
 export class Database {
   private static instance: Database;
-  private orders: Order[] = [];
+  private client: MongoClient | null = null;
+  private db: Db | null = null;
+  private ordersCollection: Collection<Order> | null = null;
 
   private constructor() {}
 
@@ -20,78 +18,122 @@ export class Database {
 
   async init(): Promise<void> {
     try {
-      await fs.mkdir(DATA_DIR, { recursive: true });
-      await this.loadOrders();
-    } catch (error) {
-      console.error('Database init error:', error);
-    }
-  }
+      const mongoUri = process.env.MONGODB_URI;
 
-  private async loadOrders(): Promise<void> {
-    try {
-      const data = await fs.readFile(ORDERS_FILE, 'utf-8');
-      this.orders = JSON.parse(data);
-    } catch (error) {
-      this.orders = [];
-      await this.saveOrders();
-    }
-  }
+      if (!mongoUri) {
+        console.error('MONGODB_URI not set, using in-memory storage (data will be lost on restart)');
+        return;
+      }
 
-  private async saveOrders(): Promise<void> {
-    await fs.writeFile(ORDERS_FILE, JSON.stringify(this.orders, null, 2));
+      this.client = new MongoClient(mongoUri);
+      await this.client.connect();
+
+      this.db = this.client.db('dresscode');
+      this.ordersCollection = this.db.collection<Order>('orders');
+
+      // Создаем индексы для быстрого поиска
+      await this.ordersCollection.createIndex({ userId: 1 });
+      await this.ordersCollection.createIndex({ status: 1 });
+      await this.ordersCollection.createIndex({ createdAt: -1 });
+
+      console.log('✅ MongoDB connected successfully');
+    } catch (error) {
+      console.error('MongoDB connection error:', error);
+      throw error;
+    }
   }
 
   async createOrder(order: Order): Promise<Order> {
-    this.orders.push(order);
-    await this.saveOrders();
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
+    }
+
+    await this.ordersCollection.insertOne(order as any);
     return order;
   }
 
   async getOrder(orderId: string): Promise<Order | undefined> {
-    return this.orders.find(o => o.id === orderId);
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
+    }
+
+    const order = await this.ordersCollection.findOne({ id: orderId } as any);
+    return order || undefined;
   }
 
   async getOrdersByUser(userId: number): Promise<Order[]> {
-    return this.orders.filter(o => o.userId === userId);
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
+    }
+
+    return await this.ordersCollection
+      .find({ userId } as any)
+      .sort({ createdAt: -1 })
+      .toArray();
   }
 
   async getAllOrders(): Promise<Order[]> {
-    return [...this.orders];
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
+    }
+
+    return await this.ordersCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
   }
 
   async updateOrder(orderId: string, updates: Partial<Order>): Promise<Order | null> {
-    const index = this.orders.findIndex(o => o.id === orderId);
-    if (index === -1) return null;
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
+    }
 
-    this.orders[index] = {
-      ...this.orders[index],
-      ...updates,
-      updatedAt: new Date().toISOString()
-    };
+    const result = await this.ordersCollection.findOneAndUpdate(
+      { id: orderId } as any,
+      {
+        $set: {
+          ...updates,
+          updatedAt: new Date().toISOString()
+        }
+      },
+      { returnDocument: 'after' }
+    );
 
-    await this.saveOrders();
-    return this.orders[index];
+    return result || null;
   }
 
   async deleteOrder(orderId: string): Promise<boolean> {
-    const initialLength = this.orders.length;
-    this.orders = this.orders.filter(o => o.id !== orderId);
-
-    if (this.orders.length < initialLength) {
-      await this.saveOrders();
-      return true;
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
     }
-    return false;
+
+    const result = await this.ordersCollection.deleteOne({ id: orderId } as any);
+    return result.deletedCount > 0;
   }
 
   async getOrderStats() {
-    const total = this.orders.length;
-    const paid = this.orders.filter(o => o.status === 'paid').length;
-    const pending = this.orders.filter(o => o.status === 'pending').length;
-    const totalRevenue = this.orders
-      .filter(o => o.status === 'paid')
-      .reduce((sum, o) => sum + o.finalTotal, 0);
+    if (!this.ordersCollection) {
+      throw new Error('Database not initialized');
+    }
+
+    const total = await this.ordersCollection.countDocuments();
+    const paid = await this.ordersCollection.countDocuments({ status: 'paid' } as any);
+    const pending = await this.ordersCollection.countDocuments({ status: 'pending' } as any);
+
+    const revenueResult = await this.ordersCollection.aggregate([
+      { $match: { status: 'paid' } },
+      { $group: { _id: null, total: { $sum: '$finalTotal' } } }
+    ]).toArray();
+
+    const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
 
     return { total, paid, pending, totalRevenue };
+  }
+
+  async close(): Promise<void> {
+    if (this.client) {
+      await this.client.close();
+      console.log('MongoDB connection closed');
+    }
   }
 }
