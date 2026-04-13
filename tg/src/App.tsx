@@ -52,6 +52,7 @@ declare global {
       WebApp: {
         expand: () => void;
         enableClosingConfirmation: () => void;
+        disableClosingConfirmation: () => void;
         initDataUnsafe?: {
           user?: TelegramUser;
         };
@@ -249,7 +250,6 @@ function App() {
       const tg = window.Telegram?.WebApp;
       if (tg) {
         tg.expand();
-        tg.enableClosingConfirmation();
         tg.ready();
 
         if (tg.initDataUnsafe?.user) {
@@ -324,6 +324,18 @@ function App() {
   useEffect(() => {
     console.log('=== isAdmin STATE CHANGED ===', isAdmin);
   }, [isAdmin]);
+
+  // Умное предупреждение при закрытии - только если корзина не пустая
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      if (cart.length > 0) {
+        tg.enableClosingConfirmation();
+      } else {
+        tg.disableClosingConfirmation();
+      }
+    }
+  }, [cart]);
 
   return (
     <ThemeProvider theme={theme}>
