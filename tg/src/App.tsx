@@ -335,12 +335,6 @@ function App() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               Dress Code Store
             </Typography>
-            {/* Debug badge */}
-            {isAdmin && (
-              <Typography variant="caption" sx={{ mr: 2, bgcolor: 'success.main', px: 1, py: 0.5, borderRadius: 1 }}>
-                ADMIN
-              </Typography>
-            )}
             <IconButton color="inherit" onClick={() => setCurrentView('cart')}>
               <Badge badgeContent={getTotalItems()} color="secondary">
                 <ShoppingCartIcon />
@@ -350,13 +344,6 @@ function App() {
         </AppBar>
 
         <Container maxWidth="lg" sx={{ flex: 1, py: 3 }}>
-          {/* Debug info panel */}
-          <Box sx={{ mb: 2, p: 2, bgcolor: 'info.main', color: 'white', borderRadius: 1 }}>
-            <Typography variant="caption" component="div">
-              DEBUG: User ID: {user?.id || 'not set'} | isAdmin: {isAdmin ? 'TRUE' : 'FALSE'} | View: {currentView}
-            </Typography>
-          </Box>
-
           {currentView === 'catalog' && (
             <Catalog
               products={products}
@@ -414,9 +401,6 @@ function App() {
             )}
           </BottomNavigation>
         </Paper>
-
-        {/* Debug info */}
-        {console.log('=== RENDER DEBUG ===', { isAdmin, currentView, user: user?.id })}
 
         {/* Диалог оформления заказа */}
         <Dialog open={checkoutDialogOpen} onClose={() => setCheckoutDialogOpen(false)} maxWidth="sm" fullWidth>
